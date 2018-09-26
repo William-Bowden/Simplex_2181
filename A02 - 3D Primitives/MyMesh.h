@@ -212,6 +212,12 @@ public:
 	*/
 	void GenerateSphere(float a_fRadius, int a_nSubdivisions, vector3 a_v3Color = C_WHITE);
 #pragma endregion
+	
+#pragma region Helpers
+
+	vector3 Normalized(vector3 vec);
+
+#pragma endregion
 };
 
 #endif //__MYMESH_H_

@@ -276,7 +276,26 @@ void MyMesh::GenerateCone(float a_fRadius, float a_fHeight, int a_nSubdivisions,
 	Init();
 
 	// Replace this with your code
-	GenerateCube(a_fRadius * 2.0f, a_v3Color);
+	vector3 tip(0, a_fHeight/2, 0); // point/tip of the cone
+
+	// calculate angle each tri will consume (and convert to radians)
+	float angle = (360 / a_nSubdivisions) * (PI / 180);
+
+	// define the other points of the cone
+	vector3 b = vector3(0.0f, 0.0f, 0.0f);
+	vector3 c = vector3(0.0f, 0.0f, 0.0f);
+	vector3 d = vector3(0.0f, 0.0f, 0.0f);
+
+	// loop to add all tris
+	for (int i = 0; i < a_nSubdivisions; i++)
+	{
+		b = vector3(a_fRadius * cos((i + 1) * angle), -a_fHeight / 2, a_fRadius * sin((i + 1) * angle));
+		c = vector3(a_fRadius * cos((i + 2) * angle), -a_fHeight / 2, a_fRadius * sin((i + 2) * angle));
+		d = vector3(0, -a_fHeight / 2, 0);
+
+		AddTri(tip, b, c);
+		AddTri(b, d, c);
+	}
 	// -------------------------------
 
 	// Adding information about color
@@ -300,7 +319,30 @@ void MyMesh::GenerateCylinder(float a_fRadius, float a_fHeight, int a_nSubdivisi
 	Init();
 
 	// Replace this with your code
-	GenerateCube(a_fRadius * 2.0f, a_v3Color);
+	vector3 topCenter(0, a_fHeight / 2, 0); // center point on top of the cylinder
+	vector3 botCenter(0, -a_fHeight / 2, 0); // center point on bottom of the cylinder
+
+	// calculate angle each tri will consume (and convert to radians)
+	float angle = (360 / a_nSubdivisions) * (PI / 180);
+
+	// define the outer points of the cylinder (center plus radius)
+	vector3 b = vector3(0.0f, 0.0f, 0.0f);
+	vector3 c = vector3(0.0f, 0.0f, 0.0f);
+	vector3 d = vector3(0.0f, 0.0f, 0.0f);
+	vector3 e = vector3(0.0f, 0.0f, 0.0f);
+
+	// loop to add tris and quads
+	for (int i = 0; i < a_nSubdivisions; i++)
+	{
+		b = vector3(a_fRadius * cos((i + 1) * angle), a_fHeight / 2, a_fRadius * sin((i + 1) * angle));
+		c = vector3(a_fRadius * cos((i + 2) * angle), a_fHeight / 2, a_fRadius * sin((i + 2) * angle));
+		d = vector3(a_fRadius * cos((i + 1) * angle), -a_fHeight / 2, a_fRadius * sin((i + 1) * angle));
+		e = vector3(a_fRadius * cos((i + 2) * angle), -a_fHeight / 2, a_fRadius * sin((i + 2) * angle));
+
+		AddTri(botCenter, d, e);
+		AddQuad(b, c, d, e);
+		AddTri(b, topCenter, c);
+	}
 	// -------------------------------
 
 	// Adding information about color
@@ -330,7 +372,36 @@ void MyMesh::GenerateTube(float a_fOuterRadius, float a_fInnerRadius, float a_fH
 	Init();
 
 	// Replace this with your code
-	GenerateCube(a_fOuterRadius * 2.0f, a_v3Color);
+	// calculate angle each subdivision will consume (and convert to radians)
+	float angle = (360 / a_nSubdivisions) * (PI / 180);
+
+	// define the inner and outer points of the tube
+	vector3 b = vector3(0.0f, 0.0f, 0.0f); // 'top' inner left
+	vector3 c = vector3(0.0f, 0.0f, 0.0f); // 'top' inner right
+	vector3 d = vector3(0.0f, 0.0f, 0.0f); // 'top' outer left
+	vector3 e = vector3(0.0f, 0.0f, 0.0f); // 'top' outer right
+	vector3 f = vector3(0.0f, 0.0f, 0.0f); // 'bottom' inner left
+	vector3 g = vector3(0.0f, 0.0f, 0.0f); // 'bottom' inner right
+	vector3 h = vector3(0.0f, 0.0f, 0.0f); // 'bottom' outer left
+	vector3 j = vector3(0.0f, 0.0f, 0.0f); // 'bottom' outer right ('j' to keep loops consistent)
+
+	// loop to add tris and quads
+	for (int i = 0; i < a_nSubdivisions; i++)
+	{
+		b = vector3(a_fInnerRadius * cos((i + 1) * angle), a_fHeight / 2, a_fInnerRadius * sin((i + 1) * angle));
+		c = vector3(a_fInnerRadius * cos((i + 2) * angle), a_fHeight / 2, a_fInnerRadius * sin((i + 2) * angle));
+		d = vector3(a_fOuterRadius * cos((i + 1) * angle), a_fHeight / 2, a_fOuterRadius * sin((i + 1) * angle));
+		e = vector3(a_fOuterRadius * cos((i + 2) * angle), a_fHeight / 2, a_fOuterRadius * sin((i + 2) * angle));
+		f = vector3(a_fInnerRadius * cos((i + 1) * angle), -a_fHeight / 2, a_fInnerRadius * sin((i + 1) * angle));
+		g = vector3(a_fInnerRadius * cos((i + 2) * angle), -a_fHeight / 2, a_fInnerRadius * sin((i + 2) * angle));
+		h = vector3(a_fOuterRadius * cos((i + 1) * angle), -a_fHeight / 2, a_fOuterRadius * sin((i + 1) * angle));
+		j = vector3(a_fOuterRadius * cos((i + 2) * angle), -a_fHeight / 2, a_fOuterRadius * sin((i + 2) * angle));
+
+		AddQuad(b, c, d, e);
+		AddQuad(d, e, h, j);
+		AddQuad(h, j, f, g);
+		AddQuad(f, g, b, c);
+	}
 	// -------------------------------
 
 	// Adding information about color
@@ -380,17 +451,74 @@ void MyMesh::GenerateSphere(float a_fRadius, int a_nSubdivisions, vector3 a_v3Co
 		GenerateCube(a_fRadius * 2.0f, a_v3Color);
 		return;
 	}
-	if (a_nSubdivisions > 6)
-		a_nSubdivisions = 6;
+	if (a_nSubdivisions > 16)
+		a_nSubdivisions = 16;
 
 	Release();
 	Init();
 
 	// Replace this with your code
-	GenerateCube(a_fRadius * 2.0f, a_v3Color);
-	// -------------------------------
+	vector3 topCenter(0, a_fRadius, 0); // center point on top of the cylinder
+	vector3 botCenter(0, -a_fRadius, 0); // center point on bottom of the cylinder
+
+	// calculate angle each tri will consume (and convert to radians)
+	float angle = ((360 / a_nSubdivisions) * (PI / 180));
+
+	// define the outer points of the cylinder (center plus radius)
+	vector3 b = vector3(0.0f, 0.0f, 0.0f);
+	vector3 c = vector3(0.0f, 0.0f, 0.0f);
+	vector3 d = vector3(0.0f, 0.0f, 0.0f);
+	vector3 e = vector3(0.0f, 0.0f, 0.0f);
+	vector3 botLeft = vector3(0.0f, 0.0f, 0.0f);
+	vector3 botRight = vector3(0.0f, 0.0f, 0.0f);
+	vector3 prevLeft = vector3(0.0f, 0.0f, 0.0f);
+	vector3 prevRight = vector3(0.0f, 0.0f, 0.0f);
+
+	// loop to add tris and quads
+	for (int i = 0; i < a_nSubdivisions; i++)
+	{
+		b = Normalized(vector3(a_fRadius * cos((i + 1) * angle), a_fRadius, a_fRadius * sin((i + 1) * angle))) * a_fRadius;
+		c = Normalized(vector3(a_fRadius * cos((i + 2) * angle), a_fRadius, a_fRadius * sin((i + 2) * angle))) * a_fRadius;
+		d = Normalized(vector3(a_fRadius * cos((i + 1) * angle), -a_fRadius, a_fRadius * sin((i + 1) * angle))) * a_fRadius;
+		e = Normalized(vector3(a_fRadius * cos((i + 2) * angle), -a_fRadius, a_fRadius * sin((i + 2) * angle))) * a_fRadius;
+
+		AddTri(botCenter, d, e);
+
+		prevLeft = d;
+		prevRight = e;
+
+		for (int j = 0; j < a_nSubdivisions; j++)
+		{
+			botLeft = Normalized(vector3(a_fRadius * cos((i + 1) * angle), (2 * (a_fRadius * j / a_nSubdivisions)) - a_fRadius, a_fRadius * sin((i + 1) * angle))) * a_fRadius;
+			botRight = Normalized(vector3(a_fRadius * cos((i + 2) * angle), (2 * (a_fRadius * j / a_nSubdivisions)) - a_fRadius, a_fRadius * sin((i + 2) * angle))) * a_fRadius;
+			AddQuad(botLeft, botRight, prevLeft, prevRight);
+
+			prevLeft = botLeft;
+			prevRight = botRight;
+		}
+
+		AddQuad(b, c, prevLeft, prevRight);
+
+		AddTri(b, topCenter, c);
+	}
+		// -------------------------------
 
 	// Adding information about color
 	CompleteMesh(a_v3Color);
 	CompileOpenGL3X();
+}
+
+vector3 MyMesh::Normalized(vector3 vec)
+{
+	vector3 newVec = vector3(vec.x, vec.y, vec.z);
+
+	float length = sqrt(newVec.x*newVec.x + newVec.y*newVec.y + newVec.z*newVec.z);
+
+	if (length != 0) {
+		newVec.x /= length;
+		newVec.y /= length;
+		newVec.z /= length;
+	}
+
+	return newVec;
 }
