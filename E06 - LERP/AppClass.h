@@ -12,7 +12,7 @@ Date: 2017/05
 
 class Application
 {
-	String m_sProgrammer = "Alberto Bobadilla - labigm@rit.edu";
+	String m_sProgrammer = "William Bowden - wjb5377@rit.edu";
 	std::vector<vector3> m_stopsList;
 	Simplex::Model* m_pModel = nullptr;
 private:
@@ -304,6 +304,12 @@ private:
 	OUTPUT: ---
 	*/
 	Application& operator=(Application const& input);
+#pragma endregion
+
+#pragma region Helpers
+
+	vector3 Normalized(vector3 vec);
+
 #pragma endregion
 };
 

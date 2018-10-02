@@ -26,6 +26,20 @@ sf::Image LoadImageFromResource(const std::string& name)
 Application::Application() {}
 Application::Application(Application const& input) {}
 Application& Application::operator=(Application const& input) { return *this; }
+vector3 Application::Normalized(vector3 vec)
+{
+	vector3 newVec = vector3(vec.x, vec.y, vec.z);
+
+	float length = sqrt(newVec.x*newVec.x + newVec.y*newVec.y + newVec.z*newVec.z);
+
+	if (length != 0) {
+		newVec.x /= length;
+		newVec.y /= length;
+		newVec.z /= length;
+	}
+
+	return newVec;
+}
 Application::~Application(void) 
 {
 	Release();
