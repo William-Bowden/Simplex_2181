@@ -1,4 +1,10 @@
 #include "AppClass.h"
+
+std::vector<std::vector<vector3>> stopListAll;//add a list of stops to the list of lists to stop
+
+	//calculate the current position
+vector3 v3CurrentPos = ZERO_V3;
+
 void Application::InitVariables(void)
 {
 	//Change this to your name and email
@@ -23,6 +29,8 @@ void Application::InitVariables(void)
 		m_uOrbits = 7;
 
 	float fSize = 1.0f; //initial size of orbits
+	float fRadius = 0.95f; //initial size of orbits
+
 
 	//creating a color using the spectrum 
 	uint uColor = 650; //650 is Red
@@ -36,9 +44,23 @@ void Application::InitVariables(void)
 	{
 		vector3 v3Color = WaveLengthToRGB(uColor); //calculate color based on wavelength
 		m_shapeList.push_back(m_pMeshMngr->GenerateTorus(fSize, fSize - 0.1f, 3, i, v3Color)); //generate a custom torus and add it to the meshmanager
+		std::vector<vector3> stopList;//add a list of stops to the list of lists to stop
+
+		// calc angle
+		double angle = (360 / i) * (PI / 180);
+
+		// loop over sides, adding each 'point' to the a stopList
+		for (uint j = 0; j < i; j++)
+		{
+			stopList.push_back(vector3((fSize - 0.05f) * cos((j) * angle), (fSize - 0.05f) * sin((j) * angle), 0.0f));
+		}
+
+		stopListAll.push_back(stopList);
+
 		fSize += 0.5f; //increment the size for the next orbit
 		uColor -= static_cast<uint>(decrements); //decrease the wavelength
 	}
+
 }
 void Application::Update(void)
 {
@@ -56,21 +78,49 @@ void Application::Display(void)
 	// Clear the screen
 	ClearScreen();
 
+	//Get a timer
+	static float fTimer = 0;	//store the new timer
+	static uint uClock = m_pSystem->GenClock(); //generate a new clock for that timer
+	fTimer += m_pSystem->GetDeltaTime(uClock); //get the delta time for that timer
+
 	matrix4 m4View = m_pCameraMngr->GetViewMatrix(); //view Matrix
 	matrix4 m4Projection = m_pCameraMngr->GetProjectionMatrix(); //Projection Matrix
 	matrix4 m4Offset = IDENTITY_M4; //offset of the orbits, starts as the global coordinate system
 	/*
 		The following offset will orient the orbits as in the demo, start without it to make your life easier.
 	*/
-	//m4Offset = glm::rotate(IDENTITY_M4, 1.5708f, AXIS_Z);
+	m4Offset = glm::rotate(IDENTITY_M4, 1.5708f, AXIS_Z);
 
+		int pointsReached = 0;
+		int currentIndex = 0;
 	// draw a shapes
 	for (uint i = 0; i < m_uOrbits; ++i)
 	{
-		m_pMeshMngr->AddMeshToRenderList(m_shapeList[i], glm::rotate(m4Offset, 1.5708f, AXIS_X));
 
-		//calculate the current position
-		vector3 v3CurrentPos = ZERO_V3;
+		m_pMeshMngr->AddMeshToRenderList(m_shapeList[i], glm::rotate(m4Offset, 1.5708f, AXIS_X));
+		std::vector<vector3> m_stopsList = stopListAll[i];
+
+		float speed = 0.5f; // time it takes to get from point to point
+
+		// set the currentPos
+		v3CurrentPos = m_stopsList[(currentIndex % (m_stopsList.size()))];
+		vector3 targetPos = m_stopsList[(currentIndex+1 % (m_stopsList.size()))];
+
+		// calculate the percentage complete the movement is from it's start time and travel time
+		float fPercentage = Simplex::MapValue(fTimer, speed * pointsReached, speed + (speed * pointsReached), 0.0f, 1.0f);
+
+		// lerp the current pos
+		v3CurrentPos = glm::lerp(v3CurrentPos, targetPos, fPercentage);
+
+		// if we have reached the target
+		if (fPercentage >= 1.0f) {
+			// increment points reached
+			pointsReached++;
+
+			currentIndex++;
+			v3CurrentPos = targetPos;
+		}
+
 		matrix4 m4Model = glm::translate(m4Offset, v3CurrentPos);
 
 		//draw spheres
