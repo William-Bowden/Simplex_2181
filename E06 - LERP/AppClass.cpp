@@ -49,17 +49,11 @@ void Application::Display(void)
 	//Get a timer
 	static float fTimer = 0;	//store the new timer
 	static uint uClock = m_pSystem->GenClock(); //generate a new clock for that timer
-	fTimer += m_pSystem->GetDeltaTime(uClock); //get the delta time for that timer
+	fTimer = m_pSystem->GetDeltaTime(uClock); //get the delta time for that timer
 
 	//calculate the current position
 	vector3 v3CurrentPos;
 
-
-	//std::cout << v3CurrentPos.x << " " << targetPos.x << (targetPos - v3CurrentPos).x << std::endl;
-
-
-
-	//your code goes here
 	static int currentIndex = 0;
 	static int pointsReached = 0;
 	float speed = 1.0f; // time it takes to get from point to point
@@ -97,8 +91,6 @@ void Application::Display(void)
 			v3CurrentPos = m_stopsList[currentIndex - 1];
 		}
 	}
-	//-------------------
-
 
 
 
