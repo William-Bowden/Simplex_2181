@@ -131,7 +131,7 @@ void Simplex::MyCamera::SetPositionTargetAndUpward(vector3 a_v3Position, vector3
 
 void Simplex::MyCamera::CalculateViewMatrix(void)
 {
-	//Calculate the look at most of your assignment will be reflected in this method
+	//Calculate the look at. Most of your assignment will be reflected in this method
 	m_m4View = glm::lookAt(m_v3Position, m_v3Target, glm::normalize(m_v3Above - m_v3Position)); //position, target, upward
 }
 
@@ -152,11 +152,29 @@ void Simplex::MyCamera::CalculateProjectionMatrix(void)
 
 void MyCamera::MoveForward(float a_fDistance)
 {
-	//The following is just an example and does not take in account the forward vector (AKA view vector)
-	m_v3Position += vector3(0.0f, 0.0f,-a_fDistance);
-	m_v3Target += vector3(0.0f, 0.0f, -a_fDistance);
-	m_v3Above += vector3(0.0f, 0.0f, -a_fDistance);
+	// add the vector pointing from the current position to the forward(target) vector, normalize it and multiply by speed
+	m_v3Position += glm::normalize((m_v3Target - m_v3Position)) * a_fDistance;
+	m_v3Target += glm::normalize((m_v3Target - m_v3Position)) * a_fDistance;
+	m_v3Above += glm::normalize((m_v3Target - m_v3Position)) * a_fDistance;
 }
 
-void MyCamera::MoveVertical(float a_fDistance){}//Needs to be defined
-void MyCamera::MoveSideways(float a_fDistance){}//Needs to be defined
+void MyCamera::MoveVertical(float a_fDistance){
+	// add the vector pointing from the current position to the above vector, normalize it and multiply by speed
+	m_v3Position += glm::normalize((m_v3Above - m_v3Position)) * a_fDistance;
+	m_v3Target += glm::normalize((m_v3Above - m_v3Position)) * a_fDistance;
+	m_v3Above += glm::normalize((m_v3Above - m_v3Position)) * a_fDistance;
+}
+
+void MyCamera::MoveSideways(float a_fDistance){
+	// add the cross product of the above vector and target vector, normalize it and multiply by speed
+	vector3 change = glm::normalize(glm::cross((m_v3Above - m_v3Position), (m_v3Target - m_v3Position)));
+
+	m_v3Position +=  change * a_fDistance;
+	m_v3Target += change * a_fDistance;
+	m_v3Above += change * a_fDistance;
+}
+
+void Simplex::MyCamera::ChangePitchAndYaw(float fAngleX, float fAngleY)
+{
+	SetTarget(m_v3Target + vector3(fAngleY, fAngleX, 0.0f));
+}

@@ -230,6 +230,13 @@ public:
 	OUTPUT: ---
 	*/
 	void MoveSideways(float a_fDistance = 0.1f);
+	/*
+	USAGE: Rotates the camera right/left and up/down
+	ARGUMENTS:	float fAngleX -> amount of movement
+				float fAngleY -> amount of movement
+	OUTPUT: ---
+	*/
+	void ChangePitchAndYaw(float fAngleX, float fAngleY);
 };
 
 } //namespace Simplex
