@@ -71,25 +71,72 @@ void MyRigidBody::SetColorNotColliding(vector3 a_v3Color) { m_v3ColorNotCollidin
 vector3 MyRigidBody::GetCenterLocal(void) { return m_v3Center; }
 vector3 MyRigidBody::GetMinLocal(void) { return m_v3MinL; }
 vector3 MyRigidBody::GetMaxLocal(void) { return m_v3MaxL; }
-vector3 MyRigidBody::GetCenterGlobal(void){	return vector3(m_m4ToWorld * vector4(m_v3Center, 1.0f)); }
+vector3 MyRigidBody::GetCenterGlobal(void) { return vector3(m_m4ToWorld * vector4(m_v3Center, 1.0f)); }
 vector3 MyRigidBody::GetMinGlobal(void) { return m_v3MinG; }
 vector3 MyRigidBody::GetMaxGlobal(void) { return m_v3MaxG; }
 vector3 MyRigidBody::GetHalfWidth(void) { return m_v3HalfWidth; }
 matrix4 MyRigidBody::GetModelMatrix(void) { return m_m4ToWorld; }
 void MyRigidBody::SetModelMatrix(matrix4 a_m4ModelMatrix)
 {
-	//to save some calculations if the model matrix is the same there is nothing to do here
+	//if the model matrix is the same there is nothing to do here
 	if (a_m4ModelMatrix == m_m4ToWorld)
 		return;
 
 	m_m4ToWorld = a_m4ModelMatrix;
-	
-	//your code goes here---------------------
-	m_v3MinG = m_v3MinL;
-	m_v3MaxG = m_v3MaxL;
-	//----------------------------------------
+	m_v3GlobalCenter = vector3(m_m4ToWorld * vector4(m_v3Center, 1.0f));
 
-	//we calculate the distance between min and max vectors
+	// get the corners of the cube
+	vector3 v3Corner[8];
+
+	v3Corner[0] = m_v3MinL;
+	v3Corner[1] = vector3(m_v3MaxL.x, m_v3MinL.y, m_v3MinL.z);
+	v3Corner[2] = vector3(m_v3MinL.x, m_v3MaxL.y, m_v3MinL.z);
+	v3Corner[3] = vector3(m_v3MaxL.x, m_v3MaxL.y, m_v3MinL.z);
+	v3Corner[4] = vector3(m_v3MinL.x, m_v3MinL.y, m_v3MaxL.z);
+	v3Corner[5] = vector3(m_v3MaxL.x, m_v3MinL.y, m_v3MaxL.z);
+	v3Corner[6] = vector3(m_v3MinL.x, m_v3MaxL.y, m_v3MaxL.z);
+	v3Corner[7] = m_v3MaxL;
+
+	// Place them in world space
+	for (uint i = 0; i < v3Corner->length(); ++i) {
+		v3Corner[i] = vector3(m_m4ToWorld * vector4(v3Corner[i], 1.0f));
+	}
+
+	// give the max and min a starting value (the first corner)
+	m_v3MaxG = v3Corner[0]; 
+	m_v3MinG = v3Corner[0];
+
+	// get the new max and min for the global box (skipping corner one)
+	for (uint i = 1; i < v3Corner->length(); ++i) {
+		// check for max x
+		if (m_v3MaxG.x < v3Corner[i].x) {
+			m_v3MaxG.x = v3Corner[i].x;
+		}
+		// check for min x
+		else if (m_v3MinG.x > v3Corner[i].x) {
+			m_v3MinG.x = v3Corner[i].x;
+		}
+
+		// check for max y
+		if (m_v3MaxG.y < v3Corner[i].y) {
+			m_v3MaxG.y = v3Corner[i].y;
+		}
+		// check for min y
+		else if (m_v3MinG.y > v3Corner[i].y) {
+			m_v3MinG.y = v3Corner[i].y;
+		}
+
+		// check for max z
+		if (m_v3MaxG.z < v3Corner[i].z) {
+			m_v3MaxG.z = v3Corner[i].z;
+		}
+		// check for min z
+		else if (m_v3MinG.z > v3Corner[i].z) {
+			m_v3MinG.z = v3Corner[i].z;
+		}
+	}
+
+	// m_v3ARBBSize is the distance between min and max vectors
 	m_v3ARBBSize = m_v3MaxG - m_v3MinG;
 }
 //The big 3

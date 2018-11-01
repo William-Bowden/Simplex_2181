@@ -14,7 +14,7 @@ void MyRigidBody::Init(void)
 	m_v3ColorNotColliding = C_WHITE;
 
 	m_v3CenterL = ZERO_V3;
-	m_v3CenterG = ZERO_V3;
+	m_v3GlobalCenter = ZERO_V3;
 	m_v3MinL = ZERO_V3;
 	m_v3MaxL = ZERO_V3;
 
@@ -41,7 +41,7 @@ void MyRigidBody::Swap(MyRigidBody& other)
 	std::swap(m_v3ColorNotColliding, other.m_v3ColorNotColliding);
 
 	std::swap(m_v3CenterL, other.m_v3CenterL);
-	std::swap(m_v3CenterG, other.m_v3CenterG);
+	std::swap(m_v3GlobalCenter, other.m_v3GlobalCenter);
 	std::swap(m_v3MinL, other.m_v3MinL);
 	std::swap(m_v3MaxL, other.m_v3MaxL);
 
@@ -76,7 +76,7 @@ void MyRigidBody::SetColorNotColliding(vector3 a_v3Color) { m_v3ColorNotCollidin
 vector3 MyRigidBody::GetCenterLocal(void) { return m_v3CenterL; }
 vector3 MyRigidBody::GetMinLocal(void) { return m_v3MinL; }
 vector3 MyRigidBody::GetMaxLocal(void) { return m_v3MaxL; }
-vector3 MyRigidBody::GetCenterGlobal(void){ return m_v3CenterG; }
+vector3 MyRigidBody::GetCenterGlobal(void){ return m_v3GlobalCenter; }
 vector3 MyRigidBody::GetMinGlobal(void) { return m_v3MinG; }
 vector3 MyRigidBody::GetMaxGlobal(void) { return m_v3MaxG; }
 vector3 MyRigidBody::GetHalfWidth(void) { return m_v3HalfWidth; }
@@ -90,7 +90,7 @@ void MyRigidBody::SetModelMatrix(matrix4 a_m4ModelMatrix)
 	//Assign the model matrix
 	m_m4ToWorld = a_m4ModelMatrix;
 
-	m_v3CenterG = vector3(m_m4ToWorld * vector4(m_v3CenterL, 1.0f));
+	m_v3GlobalCenter = vector3(m_m4ToWorld * vector4(m_v3CenterL, 1.0f));
 
 	//Calculate the 8 corners of the cube
 	vector3 v3Corner[8];
@@ -185,7 +185,7 @@ MyRigidBody::MyRigidBody(MyRigidBody const& other)
 	m_v3ColorNotColliding = other.m_v3ColorNotColliding;
 
 	m_v3CenterL = other.m_v3CenterL;
-	m_v3CenterG = other.m_v3CenterG;
+	m_v3GlobalCenter = other.m_v3GlobalCenter;
 	m_v3MinL = other.m_v3MinL;
 	m_v3MaxL = other.m_v3MaxL;
 
@@ -318,8 +318,8 @@ void MyRigidBody::AddToRenderList(void)
 	if (m_bVisibleARBB)
 	{
 		if (m_CollidingRBSet.size() > 0)
-			m_pMeshMngr->AddWireCubeToRenderList(glm::translate(m_v3CenterG) * glm::scale(m_v3ARBBSize), C_YELLOW);
+			m_pMeshMngr->AddWireCubeToRenderList(glm::translate(m_v3GlobalCenter) * glm::scale(m_v3ARBBSize), C_YELLOW);
 		else
-			m_pMeshMngr->AddWireCubeToRenderList(glm::translate(m_v3CenterG) * glm::scale(m_v3ARBBSize), C_YELLOW);
+			m_pMeshMngr->AddWireCubeToRenderList(glm::translate(m_v3GlobalCenter) * glm::scale(m_v3ARBBSize), C_YELLOW);
 	}
 }
