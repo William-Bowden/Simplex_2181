@@ -71,7 +71,7 @@ void MyRigidBody::SetColorNotColliding(vector3 a_v3Color) { m_v3ColorNotCollidin
 vector3 MyRigidBody::GetCenterLocal(void) { return m_v3Center; }
 vector3 MyRigidBody::GetMinLocal(void) { return m_v3MinL; }
 vector3 MyRigidBody::GetMaxLocal(void) { return m_v3MaxL; }
-vector3 MyRigidBody::GetCenterGlobal(void){	return vector3(m_m4ToWorld * vector4(m_v3Center, 1.0f)); }
+vector3 MyRigidBody::GetCenterGlobal(void) { return vector3(m_m4ToWorld * vector4(m_v3Center, 1.0f)); }
 vector3 MyRigidBody::GetMinGlobal(void) { return m_v3MinG; }
 vector3 MyRigidBody::GetMaxGlobal(void) { return m_v3MaxG; }
 vector3 MyRigidBody::GetHalfWidth(void) { return m_v3HalfWidth; }
@@ -228,11 +228,11 @@ bool MyRigidBody::IsColliding(MyRigidBody* const a_pOther)
 {
 	//check if spheres are colliding as pre-test
 	bool bColliding = (glm::distance(GetCenterGlobal(), a_pOther->GetCenterGlobal()) < m_fRadius + a_pOther->m_fRadius);
-	
+
 	//if they are colliding check the SAT
 	if (bColliding)
 	{
-		if(SAT(a_pOther) != eSATResults::SAT_NONE)
+		if (SAT(a_pOther) == eSATResults::SAT_NONE)
 			bColliding = false;// reset to false
 	}
 
@@ -286,7 +286,73 @@ uint MyRigidBody::SAT(MyRigidBody* const a_pOther)
 	Simplex that might help you [eSATResults] feel free to use it.
 	(eSATResults::SAT_NONE has a value of 0)
 	*/
+	uint axis = eSATResults::SAT_NONE;
 
-	//there is no axis test that separates this two objects
-	return eSATResults::SAT_NONE;
+	//if the boxes intersect
+	if (BoxIntersect(*this, *a_pOther)) {
+		// set the axis to an integer representing true
+		axis = 1;
+	}
+
+	// return the axis that seperates these objects
+	return axis;
+}
+
+// checks if boxes are overlapping with regards to a specific axis
+bool Simplex::MyRigidBody::AxisOverlap(vector3 Axis, MyRigidBody Box0, MyRigidBody Box1)
+{
+	float min0, max0;
+	float min1, max1;
+
+	ComputeBoxExtents(Axis, Box0, min0, max0);
+	ComputeBoxExtents(Axis, Box1, min1, max1);
+
+	return ExtentsOverlap(min0, max0, min1, max1);
+}
+
+// check box intersection
+bool Simplex::MyRigidBody::BoxIntersect(MyRigidBody bb1, MyRigidBody bb2)
+{
+	if (!AxisOverlap(bb1.GetCenterGlobal() + vector3(bb1.GetHalfWidth().x, 0.0f, 0.0f), bb1, bb2)) return false; // bb1 x norm
+	if (!AxisOverlap(bb1.GetCenterGlobal() + vector3(0.0f, bb1.GetHalfWidth().y, 0.0f), bb1, bb2)) return false; // bb1 y norm
+	if (!AxisOverlap(bb1.GetCenterGlobal() + vector3(0.0f, 0.0f, bb1.GetHalfWidth().z), bb1, bb2)) return false; // bb1 z norm
+
+	if (!AxisOverlap(bb2.GetCenterGlobal() + vector3(bb2.GetHalfWidth().x, 0.0f, 0.0f), bb1, bb2)) return false; // bb2 x norm
+	if (!AxisOverlap(bb2.GetCenterGlobal() + vector3(0.0f, bb2.GetHalfWidth().y, 0.0f), bb1, bb2)) return false; // bb2 y norm
+	if (!AxisOverlap(bb2.GetCenterGlobal() + vector3(0.0f, 0.0f, bb2.GetHalfWidth().z), bb1, bb2)) return false; // bb2 z norm
+
+	if (!AxisOverlap(glm::cross(bb1.GetCenterGlobal() + vector3(bb1.GetHalfWidth().x, 0.0f, 0.0f), bb2.GetCenterGlobal() + vector3(bb2.GetHalfWidth().x, 0.0f, 0.0f)), bb1, bb2)) return false; // bb1 x cross bb2 x
+	if (!AxisOverlap(glm::cross(bb1.GetCenterGlobal() + vector3(bb1.GetHalfWidth().x, 0.0f, 0.0f), bb2.GetCenterGlobal() + vector3(0.0f, bb2.GetHalfWidth().y, 0.0f)), bb1, bb2)) return false; // bb1 x cross bb2 y
+	if (!AxisOverlap(glm::cross(bb1.GetCenterGlobal() + vector3(bb1.GetHalfWidth().x, 0.0f, 0.0f), bb2.GetCenterGlobal() + vector3(0.0f, 0.0f, bb2.GetHalfWidth().z)), bb1, bb2)) return false; // bb1 x cross bb2 z
+
+	if (!AxisOverlap(glm::cross(bb1.GetCenterGlobal() + vector3(0.0f, bb1.GetHalfWidth().y, 0.0f), bb2.GetCenterGlobal() + vector3(bb2.GetHalfWidth().x, 0.0f, 0.0f)), bb1, bb2)) return false; // bb1 y cross bb2 x
+	if (!AxisOverlap(glm::cross(bb1.GetCenterGlobal() + vector3(0.0f, bb1.GetHalfWidth().y, 0.0f), bb2.GetCenterGlobal() + vector3(0.0f, bb2.GetHalfWidth().y, 0.0f)), bb1, bb2)) return false; // bb1 y cross bb2 y
+	if (!AxisOverlap(glm::cross(bb1.GetCenterGlobal() + vector3(0.0f, bb1.GetHalfWidth().y, 0.0f), bb2.GetCenterGlobal() + vector3(0.0f, 0.0f, bb2.GetHalfWidth().z)), bb1, bb2)) return false; // bb1 y cross bb2 z
+
+	if (!AxisOverlap(glm::cross(bb1.GetCenterGlobal() + vector3(0.0f, 0.0f, bb1.GetHalfWidth().z), bb2.GetCenterGlobal() + vector3(bb2.GetHalfWidth().x, 0.0f, 0.0f)), bb1, bb2)) return false; // bb1 z cross bb2 x
+	if (!AxisOverlap(glm::cross(bb1.GetCenterGlobal() + vector3(0.0f, 0.0f, bb1.GetHalfWidth().z), bb2.GetCenterGlobal() + vector3(0.0f, bb2.GetHalfWidth().y, 0.0f)), bb1, bb2)) return false; // bb1 z cross bb2 y
+	if (!AxisOverlap(glm::cross(bb1.GetCenterGlobal() + vector3(0.0f, 0.0f, bb1.GetHalfWidth().z), bb2.GetCenterGlobal() + vector3(0.0f, 0.0f, bb2.GetHalfWidth().z)), bb1, bb2)) return false; // bb1 z cross bb2 z
+
+	return true;
+}
+
+// compute the extents of one box against a vector axis
+void Simplex::MyRigidBody::ComputeBoxExtents(vector3 axis, MyRigidBody bb, float& min, float &max)
+{
+	float p = glm::dot(bb.GetCenterGlobal(), axis);
+
+	float r0 = (std::abs(bb.GetCenterGlobal().x)) * bb.GetHalfWidth().x;
+	float r1 = (std::abs(bb.GetCenterGlobal().y)) * bb.GetHalfWidth().y;
+	float r2 = (std::abs(bb.GetCenterGlobal().z)) * bb.GetHalfWidth().z;
+
+	float r = r0 + r1 + r2;
+
+	min = p - r;
+	max = p + r;
+}
+
+// tests if two extents overlap
+bool Simplex::MyRigidBody::ExtentsOverlap(float min0, float max0, float min1, float max1)
+{
+	return !(min0 > max1 || min1 > max0);
 }

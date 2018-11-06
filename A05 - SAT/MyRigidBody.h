@@ -225,6 +225,11 @@ public:
 	Output: ---
 	*/
 	void SetModelMatrix(matrix4 a_m4ModelMatrix);
+
+	bool AxisOverlap(vector3 Axis, MyRigidBody Box0, MyRigidBody Box1);
+	bool BoxIntersect(MyRigidBody bb1, MyRigidBody bb2);
+	void ComputeBoxExtents(vector3 axis, MyRigidBody bb, float& min, float &max);
+	bool ExtentsOverlap(float min0, float max0, float min1, float max1);
 #pragma endregion
 	
 private:
